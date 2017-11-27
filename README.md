@@ -24,4 +24,4 @@ Analysis of public data of river organic pollution in South Korea
   
 ## Maps
 
-  13. Scores and categories map [Figure 13](figures/13fig.png)  
+  13. Scores and categories map [Figure 13](figures/fig13.png)  
