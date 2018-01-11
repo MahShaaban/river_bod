@@ -1,12 +1,17 @@
+library(tidyverse)
 library(readxl)
+library(leaflet)
+library(webshot)
+library(mapview)
+source('R/functions.R')
 
-wqi <- read_excel('data/WQI.xlsx', skip = 2) %>%
-    select(1:5, 10:13) %>%
+wqi <- read_excel('data/WQI_classification.xlsx', skip = 1) %>%
     setNames(c('region', 'korean_name', 'river_name', 'north', 'east', 'wqi', 'bod','toc', 'tp')) %>%
     mutate(north = to_decimal(north, pattern = "º |'|\\.|\""),
            east = to_decimal(east, pattern = "º |'|\\.|\""))
-color = data_frame(bod = c("Ia", "Ib","II","III","VI"),
-                   color = c('blue', 'green', 'yellow', 'orange', 'red'))
+
+color = data_frame(bod = c('Ia', 'Ib', 'II', 'III', 'IV', 'V', 'VI'),	
+                   color = c('blue', 'green', 'yellow', 'orange', 'pink', 'red', 'black'))
 wqi %>%
     left_join(color) %>%
     leaflet() %>%
@@ -18,11 +23,11 @@ wqi %>%
                color = ~color,
                popup = ~river_name) %>%
     addLegend('topright',
-              labels = c("Ia", "Ib","II","III","VI"),
-              colors = c('blue', 'green', 'yellow', 'orange', 'red'))
+              labels = color$bod,
+              colors = color$color)
 
-color = data_frame(toc = c("Ia", "Ib","II","III","VI"),
-                   color = c('blue', 'green', 'yellow', 'orange', 'red'))
+color = data_frame(toc = c('Ia', 'Ib', 'II', 'III', 'IV', 'V', 'VI'),	
+                   color = c('blue', 'green', 'yellow', 'orange', 'pink', 'red', 'black'))
 
 wqi %>%
     left_join(color) %>%
@@ -34,29 +39,11 @@ wqi %>%
                fillOpacity = .9,
                color = ~color) %>%
     addLegend('topright',
-              labels = c("Ia", "Ib","II","III","VI"),
-              colors = c('blue', 'green', 'yellow', 'orange', 'red'))
+              labels = color$toc,
+              colors = color$color)
 
-color = data_frame(wqi = c('Excellent', 'Good', 'Fair', 'Poor', 'Very Poor'),
-                   color = c('blue', 'green', 'yellow', 'orange', 'red'))
-
-wqi %>%
-    left_join(color) %>%
-    left_join(color) %>%
-    leaflet() %>%
-    addProviderTiles(providers$CartoDB.Positron) %>%
-    addCircles(lng = ~ east,
-               lat = ~ north,
-               radius = 1000,
-               fillOpacity = .9,
-               color = ~color) %>%
-    addLegend('topright',
-              labels = c('Excellent', 'Good', 'Fair', 'Poor', 'Very Poor'),
-              colors = c('blue', 'green', 'yellow', 'orange', 'red'))
-
-
-color = data_frame(tp = c("Ia", "Ib","II","III","VI"),
-                   color = c('blue', 'green', 'yellow', 'orange', 'red'))
+color = data_frame(tp = c('Ia', 'Ib', 'II', 'III', 'IV', 'V', 'VI'),	
+                   color = c('blue', 'green', 'yellow', 'orange', 'pink', 'red', 'black'))
 
 wqi %>%
     left_join(color) %>%
@@ -69,8 +56,25 @@ wqi %>%
                color = ~color,
                popup = ~river_name) %>%
     addLegend('topright',
-              labels = c("Ia", "Ib","II","III","VI"),
-              colors = c('blue', 'green', 'yellow', 'orange', 'red'))
+              labels = color$tp,
+              colors = color$color)
+    
+
+color = data_frame(wqi = c('Excellent', 'Good', 'Fair', 'Marginal', 'Poor'),
+                   color = c('blue', 'yellow', 'orange', 'pink', 'red'))
+
+wqi %>%
+    left_join(color) %>%
+    leaflet() %>%
+    addProviderTiles(providers$CartoDB.Positron) %>%
+    addCircles(lng = ~ east,
+               lat = ~ north,
+               radius = 1000,
+               fillOpacity = .9,
+               color = ~color) %>%
+    addLegend('topright',
+              labels = color$wqi,
+              colors = color$color)
 
 wqi %>%
     mutate(id = row_number()) %>%
