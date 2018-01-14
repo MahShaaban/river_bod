@@ -1,17 +1,31 @@
 library(tidyverse)
 library(readxl)
 library(leaflet)
-library(webshot)
-library(mapview)
+library(sp)
+library(ggmap)
 source('R/functions.R')
 
 wqi <- read_excel('data/WQI_classification.xlsx', skip = 1) %>%
     setNames(c('region', 'korean_name', 'river_name', 'north', 'east', 'wqi', 'bod','toc', 'tp')) %>%
     mutate(north = to_decimal(north, pattern = "º |'|\\.|\""),
-           east = to_decimal(east, pattern = "º |'|\\.|\""))
+           east = to_decimal(east, pattern = "º |'|\\.|\""),
+           bod = factor(bod, levels = c('Ia', 'Ib', 'II', 'III', 'IV', 'V', 'VI')))
 
 color = data_frame(bod = c('Ia', 'Ib', 'II', 'III', 'IV', 'V', 'VI'),	
                    color = c('blue', 'green', 'yellow', 'orange', 'pink', 'red', 'black'))
+
+adm <- fortify(read_rds('data/KOR_adm2.rds')) %>%
+    filter(id %in% 131:150)
+
+adm %>%
+    ggplot(aes(long, lat, group = group)) +
+    geom_polygon(color = 'darkgrey', fill = 'lightgrey') +
+    geom_point(data = wqi, aes(x = east, y = north, color = bod, group = 1)) +
+    theme_void() +
+    labs(color = 'BOD') +
+    scale_color_manual(values = c('blue', 'green', 'yellow', 'orange', 'pink', 'red', 'black'),
+                       drop = FALSE) 
+ggsave('figures/bod_newmap.png', width = 15, height = 10, units = 'cm', dpi = 500)
 wqi %>%
     left_join(color) %>%
     leaflet() %>%
